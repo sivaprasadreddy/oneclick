@@ -1,6 +1,7 @@
 mod contacts;
 mod db;
 mod notes;
+mod reminders;
 
 use db::DbState;
 use std::sync::Mutex;
@@ -16,6 +17,7 @@ pub fn run() {
             let db_path = app_data_dir.join("oneclick.db");
             let conn = contacts::init_db(&db_path).expect("failed to initialize database");
             notes::init_table(&conn).expect("failed to initialize notes table");
+            reminders::init_table(&conn).expect("failed to initialize reminders table");
             app.manage(DbState(Mutex::new(conn)));
             Ok(())
         })
@@ -28,6 +30,10 @@ pub fn run() {
             notes::create_note,
             notes::update_note,
             notes::delete_note,
+            reminders::get_reminders,
+            reminders::create_reminder,
+            reminders::update_reminder,
+            reminders::delete_reminder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

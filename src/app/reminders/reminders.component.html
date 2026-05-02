@@ -1,0 +1,166 @@
+<div class="reminders-page">
+  <div class="page-header">
+    <h2>Reminders</h2>
+    <button class="btn-primary" (click)="openAdd()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      New Reminder
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  <div class="search-bar">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input #searchInput type="search" placeholder="Search reminders…"
+           [value]="searchQuery()" (input)="searchQuery.set(searchInput.value)" />
+    @if (searchQuery()) {
+      <button class="btn-clear" title="Clear" (click)="searchQuery.set(''); searchInput.value = ''">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    }
+  </div>
+
+  @if (reminders().length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <p>No reminders yet. Add your first reminder!</p>
+    </div>
+  } @else if (filteredReminders().length === 0) {
+    <div class="empty-state">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <p>No reminders match <strong>{{ searchQuery() }}</strong></p>
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Content</th>
+            <th>Scheduled On</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (reminder of filteredReminders(); track reminder.id) {
+            <tr [class.overdue]="isOverdue(reminder.scheduled_on)">
+              <td class="title-cell">
+                @if (isOverdue(reminder.scheduled_on)) {
+                  <span class="badge-overdue">Overdue</span>
+                }
+                <span>{{ reminder.title }}</span>
+              </td>
+              <td class="content-cell">{{ truncate(reminder.content) }}</td>
+              <td class="date-cell" [class.overdue-text]="isOverdue(reminder.scheduled_on)">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                {{ formatDateTime(reminder.scheduled_on) }}
+              </td>
+              <td class="actions-cell">
+                <button class="btn-icon" title="Edit" (click)="openEdit(reminder)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon btn-danger" title="Delete" (click)="requestDelete(reminder)">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+@if (pendingDeleteReminder()) {
+  <app-confirmation-dialog
+    title="Delete Reminder"
+    [message]="'Delete ' + pendingDeleteReminder()!.title + '? This action cannot be undone.'"
+    confirmLabel="Delete"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
+}
+
+@if (showModal()) {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editingId() !== null ? 'Edit Reminder' : 'New Reminder' }}</h3>
+        <button class="btn-close" (click)="closeModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="modal-form">
+        @if (error()) {
+          <div class="alert-error">{{ error() }}</div>
+        }
+
+        <div class="form-field">
+          <label for="title">Title <span class="required">*</span></label>
+          <input id="title" formControlName="title" placeholder="Reminder title"
+                 [class.invalid]="form.controls.title.invalid && form.controls.title.touched" />
+          @if (form.controls.title.invalid && form.controls.title.touched) {
+            <span class="field-error">Title is required</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="scheduled_on">Scheduled On <span class="required">*</span></label>
+          <input id="scheduled_on" type="datetime-local" formControlName="scheduled_on"
+                 [class.invalid]="form.controls.scheduled_on.invalid && form.controls.scheduled_on.touched" />
+          @if (form.controls.scheduled_on.invalid && form.controls.scheduled_on.touched) {
+            <span class="field-error">Scheduled date/time is required</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="content">Content</label>
+          <textarea id="content" formControlName="content"
+                    placeholder="Add details about this reminder…" rows="4"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
