@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Contact } from './contact.model';
 import { ContactService } from './contact.service';
@@ -15,6 +15,18 @@ export class ContactsComponent implements OnInit {
   private contactService = inject(ContactService);
 
   contacts = signal<Contact[]>([]);
+  searchQuery = signal('');
+
+  filteredContacts = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return this.contacts();
+    return this.contacts().filter((c) =>
+      [c.first_name, c.last_name, c.email, c.mobile].some((field) =>
+        field?.toLowerCase().includes(q),
+      ),
+    );
+  });
+
   showModal = signal(false);
   editingId = signal<number | null>(null);
   error = signal<string | null>(null);
