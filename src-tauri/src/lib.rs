@@ -1,6 +1,8 @@
 mod contacts;
+mod db;
+mod notes;
 
-use contacts::DbState;
+use db::DbState;
 use std::sync::Mutex;
 use tauri::Manager;
 
@@ -12,8 +14,8 @@ pub fn run() {
             let app_data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data_dir)?;
             let db_path = app_data_dir.join("oneclick.db");
-            let conn =
-                contacts::init_db(&db_path).expect("failed to initialize database");
+            let conn = contacts::init_db(&db_path).expect("failed to initialize database");
+            notes::init_table(&conn).expect("failed to initialize notes table");
             app.manage(DbState(Mutex::new(conn)));
             Ok(())
         })
@@ -22,6 +24,10 @@ pub fn run() {
             contacts::create_contact,
             contacts::update_contact,
             contacts::delete_contact,
+            notes::get_notes,
+            notes::create_note,
+            notes::update_note,
+            notes::delete_note,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

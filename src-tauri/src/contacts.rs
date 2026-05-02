@@ -1,9 +1,7 @@
+use crate::db::DbState;
 use rusqlite::{params, Connection};
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
 use tauri::State;
-
-pub struct DbState(pub Mutex<Connection>);
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Contact {
