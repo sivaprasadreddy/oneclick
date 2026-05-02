@@ -7,7 +7,7 @@ export class ExpenseService {
   getAll(page: number, pageSize: number, search: string): Promise<ExpensePage> {
     return invoke('get_expenses', {
       page,
-      page_size: pageSize,
+      pageSize,
       search: search.trim() || null,
     });
   }
