@@ -1,5 +1,6 @@
 mod contacts;
 mod db;
+mod expenses;
 mod notes;
 mod reminders;
 
@@ -18,6 +19,7 @@ pub fn run() {
             let conn = contacts::init_db(&db_path).expect("failed to initialize database");
             notes::init_table(&conn).expect("failed to initialize notes table");
             reminders::init_table(&conn).expect("failed to initialize reminders table");
+            expenses::init_table(&conn).expect("failed to initialize expenses table");
             app.manage(DbState(Mutex::new(conn)));
             Ok(())
         })
@@ -34,6 +36,10 @@ pub fn run() {
             reminders::create_reminder,
             reminders::update_reminder,
             reminders::delete_reminder,
+            expenses::get_expenses,
+            expenses::create_expense,
+            expenses::update_expense,
+            expenses::delete_expense,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
